@@ -1,12 +1,12 @@
-package org.trancemountain.storageservice.repository.adapter.support.s3
+package org.trancemountain.storageservice.repository.binary.adapter.support.s3
 
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ListObjectsRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import org.trancemountain.storageservice.repository.adapter.BinaryRepositoryStorageAdapter
-import org.trancemountain.storageservice.repository.adapter.FileInfo
+import org.trancemountain.storageservice.repository.binary.adapter.BinaryRepositoryStorageAdapter
+import org.trancemountain.storageservice.repository.binary.adapter.FileInfo
 import java.io.InputStream
 import java.util.UUID
 

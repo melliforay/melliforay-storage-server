@@ -1,4 +1,4 @@
-package org.trancemountain.storageservice.repository.adapter
+package org.trancemountain.storageservice.repository.binary.adapter
 
 import java.io.InputStream
 

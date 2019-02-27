@@ -1,4 +1,4 @@
-package org.trancemountain.storageservice.repository.adapter
+package org.trancemountain.storageservice.repository.binary.adapter
 
 /**
  * Provides information about the path and size of a file.
