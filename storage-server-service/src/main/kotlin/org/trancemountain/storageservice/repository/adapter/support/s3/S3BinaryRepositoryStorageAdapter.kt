@@ -38,6 +38,10 @@ class S3BinaryRepositoryStorageAdapter: BinaryRepositoryStorageAdapter {
         return FileInfo(tempLocation, putResult.metadata.contentLength)
     }
 
+    override fun inputStreamForTemporaryLocation(location: String): InputStream {
+        return s3.getObject(bucketName, "$tempLocationPrefix/$location").objectContent
+    }
+
     override fun deleteTempFile(path: String) {
         s3.deleteObject(bucketName, path)
     }
@@ -47,8 +51,8 @@ class S3BinaryRepositoryStorageAdapter: BinaryRepositoryStorageAdapter {
         return s3.listObjects(request).objectSummaries.map { FileInfo(it.key, it.size) }
     }
 
-    override fun inputStreamForLocation(location: String): InputStream {
-        return s3.getObject(bucketName, location).objectContent
+    override fun inputStreamForPermanentLocation(location: String): InputStream {
+        return s3.getObject(bucketName, "$permanentLocationPrefix/$location").objectContent
     }
 
     override fun moveTempFileToPermanentLocation(tempPath: String, targetLocation: String) {

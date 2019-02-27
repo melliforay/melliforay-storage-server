@@ -15,6 +15,12 @@ interface BinaryRepositoryStorageAdapter {
     fun createTempFile(stream: InputStream): FileInfo
 
     /**
+     * Opens an input stream for the temporary file at the given location
+     * @param location the location of the temporary file for which an input stream should be returned
+     */
+    fun inputStreamForTemporaryLocation(location: String): InputStream
+
+    /**
      * Deletes the temp file at a given path
      * @param path the relative path of a temp file to delete
      */
@@ -27,10 +33,10 @@ interface BinaryRepositoryStorageAdapter {
     fun filesWithHashPrefix(hashPrefix: String): List<FileInfo>
 
     /**
-     * Opens an input stream for the file at the given location
-     * @param location the location of the file for which an input stream should be returned
+     * Opens an input stream for the permanent file at the given location
+     * @param location the location of the permanent file for which an input stream should be returned
      */
-    fun inputStreamForLocation(location: String): InputStream
+    fun inputStreamForPermanentLocation(location: String): InputStream
 
     /**
      * Moves a temporary file at a given relative path to a permanent file at the given

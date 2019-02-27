@@ -94,8 +94,8 @@ class DefaultBinaryRepositoryTest {
             (it.getArgument(0) as InputStream).bufferedReader().use { it.readText() }
             FileInfo("temp/file", 5)
         }
-        `when`(adapter.inputStreamForLocation(eq("temp/file"))).thenReturn(ByteArrayInputStream(bytes))
-        `when`(adapter.inputStreamForLocation(contains(path))).thenReturn(ByteArrayInputStream(bytes))
+        `when`(adapter.inputStreamForTemporaryLocation(eq("temp/file"))).thenReturn(ByteArrayInputStream(bytes))
+        `when`(adapter.inputStreamForPermanentLocation(contains(path))).thenReturn(ByteArrayInputStream(bytes))
         `when`(adapter.filesWithHashPrefix(path)).thenReturn(mutableListOf(FileInfo("$path/$hash", 5)))
         repository.createFile(stream)
         verify(adapter, times(0)).moveTempFileToPermanentLocation(any(), any())
@@ -125,8 +125,8 @@ class DefaultBinaryRepositoryTest {
             (it.getArgument(0) as InputStream).bufferedReader().use { it.readText() }
             FileInfo("/tmp/file", 5)
         }
-        `when`(adapter.inputStreamForLocation(eq("/tmp/file"))).thenReturn(ByteArrayInputStream(bytes))
-        `when`(adapter.inputStreamForLocation(contains(path))).thenReturn(ByteArrayInputStream(byteArrayOf(2, 3, 4, 5, 6)))
+        `when`(adapter.inputStreamForTemporaryLocation(eq("/tmp/file"))).thenReturn(ByteArrayInputStream(bytes))
+        `when`(adapter.inputStreamForPermanentLocation(contains(path))).thenReturn(ByteArrayInputStream(byteArrayOf(2, 3, 4, 5, 6)))
         `when`(adapter.filesWithHashPrefix(path)).thenReturn(mutableListOf(FileInfo("$path/$hash", 5)))
         repository.createFile(stream)
         verify(adapter, times(1)).moveTempFileToPermanentLocation(any(), any())

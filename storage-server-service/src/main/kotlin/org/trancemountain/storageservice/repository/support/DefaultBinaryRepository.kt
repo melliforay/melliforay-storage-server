@@ -17,6 +17,8 @@ class DefaultBinaryRepository: BinaryRepository {
     @Autowired
     private lateinit var storageAdapter: BinaryRepositoryStorageAdapter
 
+    private val comparisonBufferSize = 32000
+
     private val hexFormat = "%02x"
 
     override fun createFile(stream: InputStream): String {
@@ -64,11 +66,11 @@ class DefaultBinaryRepository: BinaryRepository {
     }
 
     private fun compareBinaryData(tempLocationInfo: FileInfo, targetInfo: FileInfo): Boolean {
-        val tempInputStream = storageAdapter.inputStreamForLocation(tempLocationInfo.path)
-        val permanentInputStream = storageAdapter.inputStreamForLocation(targetInfo.path)
+        val tempInputStream = storageAdapter.inputStreamForTemporaryLocation(tempLocationInfo.path)
+        val permanentInputStream = storageAdapter.inputStreamForPermanentLocation(targetInfo.path)
         try {
-            val tempBuffer = ByteArray(2048)
-            val permBuffer = ByteArray(2048)
+            val tempBuffer = ByteArray(comparisonBufferSize)
+            val permBuffer = ByteArray(comparisonBufferSize)
             var doesMatch = true
             while (doesMatch) {
                 val tempRead = tempInputStream.read(tempBuffer, 0, tempBuffer.size)
