@@ -1,6 +1,7 @@
 package org.trancemountain.storageservice.repository.binary.support
 
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -27,8 +28,8 @@ class RelaxedBinaryDeduplicationStrategyTest {
     @Autowired
     private lateinit var strategy: RelaxedBinaryDeduplicationStrategy
 
-    @DisplayName("should treat binaries with the same hash and size as duplicates")
     @Test
+    @DisplayName("should treat binaries with the same hash and size as duplicates")
     fun shouldTreatSameSizeAsDuplicate() {
         val tempFileInfo = FileInfo("temp/file", 5)
         val permFileInfo = FileInfo("perm/file/hash", 5)
@@ -36,13 +37,25 @@ class RelaxedBinaryDeduplicationStrategyTest {
         assertTrue(retOpt.isPresent, "Duplicate file not returned")
     }
 
-    @DisplayName("should not treat binaries with different sizes as duplicates")
     @Test
+    @DisplayName("should not treat binaries with different sizes as duplicates")
     fun shouldTreatDifferentSizeAsUnique() {
         val tempFileInfo = FileInfo("temp/file", 5)
         val permFileInfo = FileInfo("perm/file/hash", 2)
         val retOpt = strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo))
         assertFalse(retOpt.isPresent, "Duplicate file returned")
+    }
+
+    @Test
+    @DisplayName("should throw an exception when finding mutliple files with the same hash and size")
+    fun shouldThrowExceptionOnMultipleMatches() {
+        val tempFileInfo = FileInfo("temp/file", 5)
+        val permFileInfo1 = FileInfo("perm/file/hash", 5)
+        val permFileInfo2 = FileInfo("perm/file2/hash", 5)
+        assertThrows(IllegalArgumentException::class.java) {
+            strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo1, permFileInfo2))
+        }
+
     }
 
 }

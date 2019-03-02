@@ -11,6 +11,7 @@
 
     <modules>
         <module>storage-server-service</module>
+        <module>storage-server-api</module>
     </modules>
 
     <properties>

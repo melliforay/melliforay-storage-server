@@ -2,12 +2,13 @@ package org.trancemountain.storageservice.repository.binary.support
 
 import com.nhaarman.mockito_kotlin.eq
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.reset
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,8 +50,21 @@ class ConservativeBinaryDeduplicationStrategyTest {
         reset(adapter)
     }
 
-    @DisplayName("should not treat binaries with different sizes as duplicates")
     @Test
+    @DisplayName("should not treat a binary with different sizes from a temp file as a duplicate")
+    fun shouldNotTreatDifferentSizesAsDuplicate() {
+
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2, 3)) }.`when`(adapter).inputStreamForTemporaryLocation(eq("temp/file"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file/hash"))
+
+        val tempFileInfo = FileInfo("temp/file", 3)
+        val permFileInfo = FileInfo("perm/file/hash", 2)
+        val retOpt = strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo))
+        assertFalse(retOpt.isPresent, "Duplicate file returned")
+    }
+
+    @Test
+    @DisplayName("should not treat binaries with different sizes as duplicates")
     fun shouldTreatDifferentSizeAsUnique() {
         val tempFileInfo = FileInfo("temp/file", 5)
         val permFileInfo = FileInfo("perm/file/hash", 2)
@@ -58,11 +72,12 @@ class ConservativeBinaryDeduplicationStrategyTest {
         assertFalse(retOpt.isPresent, "Duplicate file returned")
     }
 
-    @DisplayName("should treat binaries with same size and content as duplicates")
     @Test
+    @DisplayName("should treat binaries with same size and content as duplicates")
     fun shouldTreatSameSizeAndContentAsDuplicate() {
-        `when`(adapter.inputStreamForTemporaryLocation(eq("temp/file"))).thenReturn(ByteArrayInputStream(byteArrayOf(1, 2, 3)))
-        `when`(adapter.inputStreamForPermanentLocation(eq("perm/file/hash"))).thenReturn(ByteArrayInputStream(byteArrayOf(1, 2, 3)))
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2, 3)) }.`when`(adapter).inputStreamForTemporaryLocation(eq("temp/file"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2, 3)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file/hash"))
+
         val tempFileInfo = FileInfo("temp/file", 5)
         val permFileInfo = FileInfo("perm/file/hash", 5)
         val retOpt = strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo))
@@ -70,16 +85,41 @@ class ConservativeBinaryDeduplicationStrategyTest {
     }
 
 
-    @DisplayName("should not treat binaries with same size but different content as duplicates")
     @Test
+    @DisplayName("should not treat binaries with same size but different content as duplicates")
     fun shouldNotTreatSameSizeAndDifferentContentAsDuplicate() {
-        `when`(adapter.inputStreamForTemporaryLocation(eq("temp/file"))).thenReturn(ByteArrayInputStream(byteArrayOf(1, 2, 3)))
-        `when`(adapter.inputStreamForPermanentLocation(eq("perm/file/hash"))).thenReturn(ByteArrayInputStream(byteArrayOf(2, 3, 4)))
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2, 3)) }.`when`(adapter).inputStreamForTemporaryLocation(eq("temp/file"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(2, 3, 4)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file/hash"))
+
         val tempFileInfo = FileInfo("temp/file", 5)
         val permFileInfo = FileInfo("perm/file/hash", 5)
         val retOpt = strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo))
         assertFalse(retOpt.isPresent, "Duplicate was returned")
     }
 
+    @Test
+    @DisplayName("should not rely on file size reports alone when verifying binary content")
+    fun shouldNotRelyOnReportedFileSizeWhenCheckingContent() {
+        doAnswer { ByteArrayInputStream(byteArrayOf(1, 2, 3)) }.`when`(adapter).inputStreamForTemporaryLocation(eq("temp/file"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(2, 3)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file/hash"))
 
+        val tempFileInfo = FileInfo("temp/file", 3)
+        val permFileInfo = FileInfo("perm/file/hash", 3)
+        val retOpt = strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo))
+        assertFalse(retOpt.isPresent, "Duplicate was returned")
+    }
+
+    @Test
+    @DisplayName("should throw an exception when encountering multiple files with the same hash, size, and data")
+    fun shouldThrowExceptionOnMultipleMatches() {
+
+        doAnswer { ByteArrayInputStream(byteArrayOf(2, 3, 4)) }.`when`(adapter).inputStreamForTemporaryLocation(eq("temp/file"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(2, 3, 4)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file/hash"))
+        doAnswer { ByteArrayInputStream(byteArrayOf(2, 3, 4)) }.`when`(adapter).inputStreamForPermanentLocation(eq("perm/file2/hash"))
+
+        val tempFileInfo = FileInfo("temp/file", 3)
+        val permFileInfo1 = FileInfo("perm/file/hash", 3)
+        val permFileInfo2 = FileInfo("perm/file2/hash", 3)
+        assertThrows(IllegalArgumentException::class.java) { strategy.findDuplicateBinary(tempFileInfo, listOf(permFileInfo1, permFileInfo2)) }
+    }
 }

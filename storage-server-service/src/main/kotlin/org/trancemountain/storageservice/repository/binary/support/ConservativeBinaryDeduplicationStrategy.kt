@@ -30,7 +30,7 @@ class ConservativeBinaryDeduplicationStrategy: BinaryDeduplicationStrategy {
 
         return when(filesWithSameSize.size) {
             0 -> Optional.empty()
-            1 -> {
+            else -> {
                 val matchingBinaryFiles = filesWithSameSize.filter { compareBinaryData(temporaryFile, it) }
 
                 when(matchingBinaryFiles.size) {
@@ -39,7 +39,6 @@ class ConservativeBinaryDeduplicationStrategy: BinaryDeduplicationStrategy {
                     else -> throw IllegalArgumentException("Found multiple matching permanent files with the same hash, size and data")
                 }
             }
-            else -> throw IllegalArgumentException("Found multiple files with size ${temporaryFile.size}")
         }
     }
 

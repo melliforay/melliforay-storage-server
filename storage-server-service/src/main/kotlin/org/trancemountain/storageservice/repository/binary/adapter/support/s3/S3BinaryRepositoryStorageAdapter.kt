@@ -1,7 +1,8 @@
 package org.trancemountain.storageservice.repository.binary.adapter.support.s3
 
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsRequest
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
@@ -14,27 +15,27 @@ import java.util.UUID
 @ConditionalOnProperty("trance.service.storage.binary.adapter", havingValue = "s3")
 class S3BinaryRepositoryStorageAdapter: BinaryRepositoryStorageAdapter {
 
-    @Value("trance.service.storage.binary.adapter.s3.bucketName")
+    @Value("\${trance.service.storage.binary.adapter.s3.bucketName:trance}")
     private lateinit var bucketName: String
 
-    @Value("trance.service.storage.binary.adapter.s3.tempPrefix:temp")
+    @Value("\${trance.service.storage.binary.adapter.s3.tempPrefix:temp}")
     private lateinit var tempLocationPrefix: String
 
-    @Value("trance.service.storage.binary.adapter.s3.permanentPrefix:permanent")
+    @Value("\${trance.service.storage.binary.adapter.s3.permanentPrefix:permanent}")
     private lateinit var permanentLocationPrefix: String
 
-    private val s3 = AmazonS3ClientBuilder.defaultClient()
+    @Autowired
+    private lateinit var s3: AmazonS3
 
     override fun createTempFile(stream: InputStream): FileInfo {
         // find a unique temp file location for the input stream
-        var tempLocation: String?
+        var tempLocation: String
         do {
-            val uuid = UUID.randomUUID().toString()
-            tempLocation = "$tempLocationPrefix/$uuid"
-        } while (s3.doesObjectExist(bucketName, tempLocation))
+            tempLocation = UUID.randomUUID().toString()
+        } while (s3.doesObjectExist(bucketName, "$tempLocationPrefix/$tempLocation"))
 
         // write the data to that location and return it
-        val putResult = s3.putObject(bucketName, tempLocation!!, stream, null)
+        val putResult = s3.putObject(bucketName, "$tempLocationPrefix/$tempLocation", stream, null)
         return FileInfo(tempLocation, putResult.metadata.contentLength)
     }
 
@@ -43,7 +44,7 @@ class S3BinaryRepositoryStorageAdapter: BinaryRepositoryStorageAdapter {
     }
 
     override fun deleteTempFile(path: String) {
-        s3.deleteObject(bucketName, path)
+        s3.deleteObject(bucketName, "$tempLocationPrefix/$path")
     }
 
     override fun filesWithHashPrefix(hashPrefix: String): List<FileInfo> {
@@ -56,7 +57,7 @@ class S3BinaryRepositoryStorageAdapter: BinaryRepositoryStorageAdapter {
     }
 
     override fun moveTempFileToPermanentLocation(tempPath: String, targetLocation: String) {
-        s3.copyObject(bucketName, tempPath, bucketName, "$permanentLocationPrefix/$targetLocation")
+        s3.copyObject(bucketName, "$tempLocationPrefix/$tempPath", bucketName, "$permanentLocationPrefix/$targetLocation")
         deleteTempFile(tempPath)
     }
 }
