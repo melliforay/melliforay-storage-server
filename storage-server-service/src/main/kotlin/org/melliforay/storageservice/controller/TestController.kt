@@ -1,6 +1,7 @@
 package org.melliforay.storageservice.controller
 
-import org.melliforay.storageservice.service.SessionService
+import org.melliforay.storageservice.repository.Node
+import org.melliforay.storageservice.repository.internal.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,12 +15,12 @@ class TestController {
     private lateinit var sessionService: SessionService
 
     @GetMapping("/hello")
-    fun getHello(@CookieValue("melliforayToken") sessionToken: String): Mono<String> {
+    fun getHello(@CookieValue("melliforayToken") sessionToken: String): Mono<Node> {
         println("Using session token $sessionToken")
         val sessionOpt = sessionService.getSession(sessionToken)
         return when (sessionOpt.isPresent) {
-            true -> Mono.just("You are ${sessionOpt.get().getUserID()}")
-            false -> Mono.just("I don't know you!")
+            true -> Mono.just(sessionOpt.get().rootNode())
+            false -> Mono.empty()
         }
     }
 

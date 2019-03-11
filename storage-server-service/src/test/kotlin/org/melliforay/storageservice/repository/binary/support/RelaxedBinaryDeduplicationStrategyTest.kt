@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.melliforay.storageservice.repository.binary.adapter.FileInfo
+import org.melliforay.storageservice.repository.internal.adapter.binary.FileInfo
+import org.melliforay.storageservice.repository.internal.support.RelaxedBinaryDeduplicationStrategy
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import

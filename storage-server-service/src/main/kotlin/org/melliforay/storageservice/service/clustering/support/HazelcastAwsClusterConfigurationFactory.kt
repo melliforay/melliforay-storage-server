@@ -49,10 +49,10 @@ class HazelcastAwsClusterConfigurationFactory: ClusterConfigurationFactory {
         val join = network.join
         join.multicastConfig.isEnabled = false
         join.awsConfig.isEnabled = true
-        join.awsConfig.accessKey = accessKey
-        join.awsConfig.secretKey = secretKey
-        join.awsConfig.tagKey = tagKey
-        join.awsConfig.tagValue = tagValue
+        join.awsConfig.setProperty("access-key", accessKey)
+        join.awsConfig.setProperty("secret-key", secretKey)
+        join.awsConfig.setProperty("tag-key", tagKey)
+        join.awsConfig.setProperty("tag-value", tagValue)
 
         return cfg
     }

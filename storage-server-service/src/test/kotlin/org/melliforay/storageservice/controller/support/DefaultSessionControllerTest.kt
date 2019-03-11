@@ -7,6 +7,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.melliforay.storageservice.controller.SessionController
+import org.melliforay.storageservice.repository.NodeRepository
+import org.melliforay.storageservice.repository.Session
+import org.melliforay.storageservice.repository.support.InternalNodeRepository
+import org.melliforay.storageservice.rest.Credentials
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
@@ -19,10 +24,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.context.support.AnnotationConfigContextLoader
-import org.melliforay.storageservice.controller.SessionController
-import org.melliforay.storageservice.model.Session
-import org.melliforay.storageservice.rest.Credentials
-import org.melliforay.storageservice.service.SessionService
 import reactor.core.publisher.Mono
 import java.util.Optional
 
@@ -36,44 +37,49 @@ class DefaultSessionControllerTest {
     internal class Config
 
     @MockBean
-    private lateinit var sessionService: SessionService
+    private lateinit var nodeRepository: NodeRepository
+
+    @MockBean
+    private lateinit var internalNodeRepository: InternalNodeRepository
 
     @Autowired
     private lateinit var controller: SessionController
 
     @BeforeEach
     private fun reset() {
-        reset(sessionService)
+        reset(nodeRepository)
+        reset(internalNodeRepository)
     }
 
     @Test
     @DisplayName("should pass a session retrieve request by credentials to a session service and return the session's token")
     fun testGetSession() {
-        `when`(sessionService.getSession(any<Credentials>())).thenReturn(Optional.of(mock(Session::class.java)))
+        `when`(nodeRepository.getSession(any<Credentials>())).thenReturn(Optional.of(mock(Session::class.java)))
         controller.getSession(mock(Credentials::class.java))
-        verify(sessionService).getSession(any<Credentials>())
+        verify(nodeRepository).getSession(any<Credentials>())
     }
 
     @Test
     @DisplayName("should return a not authorized response if a session cannot be created")
     fun testGetUnauthorized() {
-        `when`(sessionService.getSession(any<Credentials>())).thenReturn(Optional.empty())
+        `when`(nodeRepository.getSession(any<Credentials>())).thenReturn(Optional.empty())
         val res: Mono<ResponseEntity<Void>> = controller.getSession(mock(Credentials::class.java))
         res.subscribe { assertEquals(HttpStatus.UNAUTHORIZED, it.statusCode) }
     }
 
     @Test
-    @DisplayName("should pass a session close request to a session service")
+    @DisplayName("should pass a session close request to a session")
     fun testCloseSession() {
-        `when`(sessionService.getSession(any<String>())).thenReturn(Optional.of(mock(Session::class.java)))
+        val mockSession = mock(Session::class.java)
+        `when`(nodeRepository.getSession(any<String>())).thenReturn(Optional.of(mockSession))
         controller.closeSession("blah")
-        verify(sessionService).closeSession(any())
+        verify(mockSession).close()
     }
 
     @Test
     @DisplayName("should return a not found response if closing a session that can't be found")
     fun testCloseUnknown() {
-        `when`(sessionService.getSession(any<Credentials>())).thenReturn(Optional.empty())
+        `when`(nodeRepository.getSession(any<Credentials>())).thenReturn(Optional.empty())
         val res: Mono<ResponseEntity<Void>> = controller.closeSession("")
         res.subscribe { assertEquals(HttpStatus.NOT_FOUND, it.statusCode) }
     }

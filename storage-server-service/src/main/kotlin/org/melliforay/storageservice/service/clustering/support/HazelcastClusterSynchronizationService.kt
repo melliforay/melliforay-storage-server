@@ -6,17 +6,21 @@ import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.HazelcastInstance
 import com.hazelcast.core.IMap
 import com.hazelcast.map.listener.EntryAddedListener
+import org.apache.logging.log4j.LogManager
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.melliforay.storageservice.model.Session
+import org.melliforay.storageservice.repository.Session
 import org.melliforay.storageservice.model.support.ClusterSessionInfo
 import org.melliforay.storageservice.service.clustering.ClusterSynchronizationService
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import java.util.Optional
 import java.util.UUID
 import javax.annotation.PostConstruct
 
 @Service
 class HazelcastClusterSynchronizationService: ClusterSynchronizationService {
+
+    private val logger = LogManager.getLogger(HazelcastClusterSynchronizationService::class.java)
 
     private val SESSION_MAP_NAME = "sessionMap"
 
@@ -50,6 +54,24 @@ class HazelcastClusterSynchronizationService: ClusterSynchronizationService {
         return when (session) {
             null -> Optional.empty()
             else -> Optional.of(session)
+        }
+    }
+
+    override fun removeSessionInfo(key: String) {
+        hazelcastInstance.getMap<String, ClusterSessionInfo>(SESSION_MAP_NAME).remove(key)
+    }
+
+    override fun executeWithGlobalLock(lockName: String, process: () -> Unit) {
+        val lock = hazelcastInstance.getLock(lockName)
+        when (lock.tryLock()) {
+            true -> {
+                try {
+                    process()
+                } finally {
+                    lock.unlock()
+                }
+            }
+            else -> logger.debug("Ignoring execution; lock $lockName is already in use.")
         }
     }
 }

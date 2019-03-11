@@ -2,7 +2,6 @@ package org.melliforay.storageservice.security
 
 import org.springframework.beans.factory.FactoryBean
 import org.springframework.security.authentication.AuthenticationProvider
-import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
@@ -18,12 +17,12 @@ import org.springframework.stereotype.Component
 class LocalUserAuthenticationProviderFactory: FactoryBean<AuthenticationProvider> {
 
     private class TestProvider: AuthenticationProvider {
-        override fun authenticate(auth: Authentication?): Authentication {
+        override fun authenticate(auth: Authentication?): Authentication? {
            val isAuthenticated = (auth?.credentials.toString() == "test" && auth?.name == "test")
             if (isAuthenticated) {
                 return UsernamePasswordAuthenticationToken(auth!!.name, auth.credentials.toString(), listOf<GrantedAuthority>(SimpleGrantedAuthority("SUPERDUDE")))
             } else {
-                throw BadCredentialsException("User doesn't have the right password")
+                return null
             }
         }
 

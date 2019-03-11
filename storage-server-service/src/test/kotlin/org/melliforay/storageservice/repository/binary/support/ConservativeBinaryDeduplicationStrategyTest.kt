@@ -8,9 +8,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.melliforay.storageservice.repository.binary.BinaryDeduplicationStrategy
-import org.melliforay.storageservice.repository.binary.adapter.BinaryRepositoryStorageAdapter
-import org.melliforay.storageservice.repository.binary.adapter.FileInfo
+import org.melliforay.storageservice.repository.internal.support.BinaryDeduplicationStrategy
+import org.melliforay.storageservice.repository.internal.adapter.binary.BinaryRepositoryStorageAdapter
+import org.melliforay.storageservice.repository.internal.adapter.binary.FileInfo
+import org.melliforay.storageservice.repository.internal.support.ConservativeBinaryDeduplicationStrategy
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.reset
