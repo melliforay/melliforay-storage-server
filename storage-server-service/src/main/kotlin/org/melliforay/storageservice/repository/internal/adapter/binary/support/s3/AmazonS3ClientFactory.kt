@@ -17,6 +17,7 @@
 
 package org.melliforay.storageservice.repository.internal.adapter.binary.support.s3
 
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import org.springframework.beans.factory.FactoryBean
@@ -27,8 +28,11 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnProperty("melliforay.service.storage.binary.adapter", havingValue = "s3")
 class AmazonS3ClientFactory: FactoryBean<AmazonS3> {
 
+    /**
+     * TODO: don't hard-code the region
+     */
     override fun getObject(): AmazonS3? {
-        return AmazonS3ClientBuilder.defaultClient()
+        return AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build()
     }
 
     override fun getObjectType(): Class<*>? {
