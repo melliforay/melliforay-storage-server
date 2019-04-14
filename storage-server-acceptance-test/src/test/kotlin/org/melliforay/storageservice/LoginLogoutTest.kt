@@ -109,7 +109,7 @@ class LoginLogoutTest {
         val token = tokenRes!!.value
 
         // ok. now log out
-        val logoutRes = RestAssured.given().header("Cookie", "melliforayToken=$token").`when`().get("/hello").andReturn()
+        val logoutRes = RestAssured.given().header("Cookie", "melliforayToken=$token").`when`().delete(sessionUrl).andReturn()
         assertEquals(200, logoutRes.statusCode, "Wrong HTTP status code")
     }
 

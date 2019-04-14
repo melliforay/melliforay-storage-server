@@ -32,6 +32,8 @@ class HazelcastStandaloneClusterConfigurationFactory: ClusterConfigurationFactor
     override fun getObject(): Config? {
         val config = Config()
         config.networkConfig.join.tcpIpConfig.isEnabled = false
+        config.networkConfig.join.multicastConfig.isEnabled = false
+        config.networkConfig.join.awsConfig.isEnabled = false
         return config
     }
 
