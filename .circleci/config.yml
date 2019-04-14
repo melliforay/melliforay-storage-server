@@ -37,3 +37,6 @@ jobs:
 
       # run tests!
       - run: mvn verify dependency:go-offline
+
+      - store_test_results:
+          path: storage-server-acceptance-test/target/surefire-reports
